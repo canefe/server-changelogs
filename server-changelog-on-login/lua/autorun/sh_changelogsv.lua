@@ -9,15 +9,14 @@ if SERVER then
 	hook.Add("PlayerSpawn","Server Changelogs",function(ply)
 
 		local tablex = sql.Query( "SELECT * FROM scol_data")
-		PrintTable(tablex)
+		
 		if (tablex == false) then return end
-		table.sort(tablex, function(a, b) return a.id > b.id end)
-		print("reserved=")
-		PrintTable(tablex)
-		--PrintMessage( HUD_PRINTCENTER, ply:Nick().." tekrardan doğdu." )
+		local checker = true
+		if (tablex == {}) then checker = false table = {"nothing"} end
+		if checker then table.sort(tablex, function(a, b) return a.id > b.id end) end
 		net.Start("changelog_menu")
 		--
-			net.WriteTable(tablex)
+			if checker then net.WriteTable(tablex) end
 		--
 		net.Send(ply)
 
@@ -114,7 +113,7 @@ local function panelTwo()
 			net.Start("changelog_add")
 
 				net.WriteString("new")
-				net.WriteString((TextEntry:GetValue() or "nothing :D"))
+				net.WriteString((TextEntry:GetValue()or "nothing :D"))
 
 			net.SendToServer()
 
@@ -181,10 +180,11 @@ local function changelogMenu()
 		for k,v in pairs(table) do vversion = vversion + 0.5 end
 
 		for k,v in pairs(table) do
-			local widht,heigth = surface.GetTextSize(v.log)
+			surface.SetFont("tre14")
+			local widht,heigth = surface.GetTextSize((v.log))
 			local background = DScrollPanel:Add( "DButton" )
 			background:SetText( "" )
-			background:SetTall( heigth + 40 )
+			background:SetTall( (heigth + 40) + (string.len(v.log) * 0.1) )
 			background:SetFont("Trebuchet24")
 			background:SetTextColor(Color(255,255,255))
 			background:Dock( TOP )
@@ -203,20 +203,9 @@ local function changelogMenu()
 				panelTwo()
 
 			end
-			local tarih = vgui.Create( "DLabel", background )
-			tarih:SetPos( 10, background:GetTall() * 0.7 )
-
-			tarih:SetFont("tre14")
-			local fersion = (vversion + v.id * .5)
-			print("fersion for",v.id,fersion)
-			if (fersion < 0) then fersion = 0.1 end
-			if (fersion == 1) then fersion = "Inital version" end
-			tarih:SetText( v.staff.." - "..v.date.." - "..v.time.." - ".."version: "..fersion.." - ".."patch id="..v.id  )
-			print("vdate is", v.date, "and aa", os.date("%x"))
-			tarih:SizeToContents()
 
 			local aciklama = vgui.Create( "RichText", background )
-			aciklama:SetPos( 0, 0)
+			aciklama:SetPos(0, 0)
 			aciklama:Dock( TOP )
 			aciklama:SetTall(100)
 
@@ -233,6 +222,22 @@ local function changelogMenu()
 			aciklama:SetFontInternal( "tre14" )
 
 			aciklama:AppendText(v.log)
+
+			local tarih = vgui.Create( "DLabel", background )
+			
+			tarih:Dock( BOTTOM )
+			tarih:DockMargin(10,0,0, 4)
+			--DockMargin(number marginLeft,number marginTop,number marginRight,number marginBottom)
+
+			tarih:SetFont("tre14")
+			local fersion = (vversion + v.id * .5)
+			if (fersion < 0) then fersion = 0.1 end
+			if (fersion == 1) then fersion = "Initital version" end
+			tarih:SetText( v.staff.." - "..v.date.." - "..v.time.." - ".."version: "..fersion.." - ".."patch id="..v.id.."  "..widht.."  "..heigth  )
+			tarih:SetColor(rgb(46, 204, 113))
+			tarih:SizeToContents()
+
+
 		end
 
 
