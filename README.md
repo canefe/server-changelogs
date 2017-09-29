@@ -19,7 +19,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Media
 
-![scol-1.0]
+![scol-1.0](https://raw.githubusercontent.com/canefe/server-changelogs/master/qweqw.png)
 
 
 
