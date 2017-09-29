@@ -6,7 +6,7 @@ if SERVER then
 
 
 
-	hook.Add("PlayerSpawn","Server Changelogs",function(ply)
+	hook.Add("PlayerInitialSpawn","Server Changelogs",function(ply)
 
 		local tablex = sql.Query( "SELECT * FROM scol_data")
 		
