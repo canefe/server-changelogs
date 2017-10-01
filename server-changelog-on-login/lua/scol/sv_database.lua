@@ -50,5 +50,6 @@ scol = scol or {}
 
 		if args then else return end
 		local id = tonumber(args[1])
+		if (id == 1) then return end
 		scol:DeleteLog(id)
 	end)
