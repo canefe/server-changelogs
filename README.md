@@ -20,12 +20,15 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## Media
 
 Version 2.2
+
 ![scol-2.2](https://raw.githubusercontent.com/canefe/server-changelogs/master/v2'2.png)
 
 Version 2.0
+
 ![scol-2.0](https://raw.githubusercontent.com/canefe/server-changelogs/master/v2'0.png)
 
 Version 1.0
+
 ![scol-1.0](https://raw.githubusercontent.com/canefe/server-changelogs/master/v1'0.png)
 
 
