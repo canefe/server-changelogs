@@ -13,9 +13,7 @@ if SERVER then
 		if (tablex == {}) then checker = false tablex = {"nothing"} end
 		if checker then table.sort(tablex, function(a, b) return a.id > b.id end) end
 		net.Start("changelog_menu")
-		--
 			if checker then net.WriteTable(tablex) end
-		--
 		net.Send(ply)
 
 	end
@@ -28,23 +26,22 @@ if SERVER then
 		if (tablex == nil) then checker = false table = {"nothing"} end
 		if checker then table.sort(tablex, function(a, b) return a.id > b.id end) end
 		net.Start("changelog_menu")
-		--
 			if checker then net.WriteTable(tablex) end
-		--
 		net.Send(ply)
 
 	end
-	hook.Add( "PlayerSay", "Killurself", function( ply, text, public )
+
+	hook.Add( "PlayerSay", "scol chatcommand", function( ply, text, public )
 		text = string.lower( text ) 
-		if ( text == "!changelog" ) then
-			scolOpen(ply)
+		if ( text == "!clog" ) then
+			refresh(ply)
 			return ""
 		end
 	end )
 
 
 
-	hook.Add("PlayerSpawn","Server Changelogs",function(ply)
+	hook.Add("PlayerInitialSpawn","Server Changelogs",function(ply)
 
 		scolOpen(ply)
 
@@ -137,8 +134,6 @@ local function GetTableID(id)
 
 	if not id then return end
 	bnet.SendToServer("scol_requestTable", id)
-
-	--if not gottasend then repeat end
 	return gottasend
 end
 
@@ -149,6 +144,18 @@ local function panelTwo()
     frame:SetTitle("New Changelog")
     frame:MakePopup()
     frame:Center()
+
+    frame.OnClose = function(self)
+
+				 timer.Simple(0.777, function()
+
+				 	net.Start("changelog_refresh")
+
+				 	net.SendToServer()
+
+				 end)
+
+	end
 
 	local DLabel = vgui.Create( "DLabel", frame )
 		DLabel:SetPos( 172, 512 )
@@ -208,17 +215,29 @@ local function panelThree(id)
 
 	
 	local toble = GetTableID(id)
-	local message = toble
 	timer.Simple(0.5555, function()
-	print("\n\n\n\n\n\n\n\n")
-	print("toble is=",toble)
+
 	if istable(toble) then
-	
+
     local frame = vgui.Create("flatblur")
 	frame:SetSize( 600, 550 )
     frame:SetTitle("Edit Changelog")
     frame:MakePopup()
     frame:Center()
+
+    function frame:OnClose()
+
+			self:Remove()
+
+				 timer.Simple(0.777, function()
+
+				 	net.Start("changelog_refresh")
+
+				 	net.SendToServer()
+
+				 end)
+
+    end
 
 
 	local DLabel = vgui.Create( "DLabel", frame )
@@ -259,6 +278,8 @@ local function panelThree(id)
 		DLabel:SetText( "Chars Left: "..((self.MaxChars - amt) or 300 - amt ) )
 	end
 
+
+
 		local DButton = vgui.Create( "flatblurButton", frame )
 		DButton:SetPos( 300, 512 )
 		DButton:SetText( "Submit" )
@@ -268,7 +289,9 @@ local function panelThree(id)
 
 				net.WriteString("edit")
 				net.WriteInt(id,8)
-				net.WriteString((TextEntry:GetValue()or oldmsg))
+				local textt = TextEntry:GetValue() or oldmsg					
+
+				net.WriteString(textt)
 
 			net.SendToServer()
 
@@ -286,15 +309,7 @@ local function panelThree(id)
 
 		end
 	else
-		LocalPlayer():PrintMessage( HUD_PRINTTALK, "Try Again.." )
-
-				 timer.Simple(0.777, function()
-
-				 	net.Start("changelog_refresh")
-
-				 	net.SendToServer()
-
-				 end)
+				 panelThree(id)
 	end
 	end)
 
@@ -307,13 +322,54 @@ end
 
 
 
+local function factCallback(id,pa)
+
+		RunConsoleCommand( "scol_remove", id )
+
+		pa:Remove()
+
+	 timer.Simple(0.777, function()
+
+			net.Start("changelog_refresh")
+
+			net.SendToServer()
+
+		end)
+
+end
 
 
 
 
+local function Dmenux(id,pa)
 
 
+			local Menu = vgui.Create( "DMenu" )		-- Is the same as vgui.Create( "DMenu" )
 
+			local Remove = Menu:AddOption( "Remove" ) -- Simple option, but we're going to add an icon
+			Remove:SetIcon( "icon16/cancel.png" )	-- Icons are in materials/icon16 folder
+
+			Remove.OnMousePressed = function( button, key )
+				Derma_Query( "Are you sure to delete this log?", "scol Remove", "Yes", function() factCallback(id,pa) end, "No", function() return end)
+				Menu:Remove()
+			end
+
+			local Edit = Menu:AddOption( "Edit" ) -- Simple option, but we're going to add an icon
+			Edit:SetIcon( "icon16/pencil.png" )	-- Icons are in materials/icon16 folder
+
+			Edit.OnMousePressed = function( button, key )
+				panelThree(id)
+
+				pa:Remove()
+				LocalPlayer():PrintMessage( HUD_PRINTTALK, "Loading..." )				
+				Menu:Remove()
+			end
+
+			Menu:SetPos(input.GetCursorPos())
+
+			Menu:Open()
+
+end
 
 
 
@@ -324,7 +380,6 @@ end
 local function changelogMenu()
 	local tablex = net.ReadTable()
     local frame = vgui.Create("flatblur")
-    PrintTable(tablex)
 	frame:SetSize( 570, 350 )
     frame:SetTitle("Changelog Menu")
     frame:MakePopup()
@@ -372,63 +427,17 @@ local function changelogMenu()
 		end
 
 		local vversion = 1
-
+		local adminCheck = false
 		for k,v in pairs(tablex) do
 
-			local function factCallback(id)
 
-				 RunConsoleCommand( "scol_remove", id )
-
-				 frame:Remove()
-
-				 timer.Simple(0.777, function()
-
-				 	net.Start("changelog_refresh")
-
-				 	net.SendToServer()
-
-				 end)
-
-			end
 			if not (tonumber(v.id) == 1) then
 
 				if (IsValid(LocalPlayer()) and LocalPlayer():IsAdmin()) then
 
-				local comboBox = DScrollPanel:Add( "DComboBoxIcons" )
-				comboBox:Dock( TOP )
-				comboBox:DockMargin( 0, 0, 5, 5 )
-			    comboBox:SetSize(100, 25)
-			    
-			   -- comboBox:AddChoice("Test", "icon16/user.png")
-			   	comboBox:AddChoice("Action:", "icon16/application_edit.png")
-			   	comboBox:AddChoice("Edit", "icon16/pencil.png")
-			    comboBox:AddChoice("Remove", "icon16/cancel.png")
+					adminCheck = true
 
 
-		    
-
-
-		    	comboBox:ChooseOptionID(1)
-
-		    function comboBox:OnSelect( index, value, data )
-
-		    	if (value == "Action:") then return end
-
-
-
-		    	if (value == "Remove") then
-				Derma_Query( "Are you sure to delete this log?", "scol Remove", "Yes", function() factCallback(v.id) end, "No", function() return end)
-				end
-				if (value == "Edit") then
-					panelThree(v.id)
-
-					frame:Remove()
-					LocalPlayer():PrintMessage( HUD_PRINTTALK, "Loading panel..." )
-
-
-
-				end
-			end
 
 
 			end
@@ -452,12 +461,28 @@ local function changelogMenu()
 				
 				
 			end
+
+
+
+			
+
+
+
+			background.DoClick = function()
+				if (tonumber(v.id) == 1) or (adminCheck == false) then return end
+				Dmenux(v.id,frame)
+
+
+
+			end
 		    			
 
 			local aciklama = vgui.Create( "RichText", background )
 			aciklama:SetPos(0, 0)
-			aciklama:Dock( TOP )
+			aciklama:Dock( FILL )
 			aciklama:SetTall(background:GetTall() - 10)
+			aciklama:SetMouseInputEnabled( false )
+			
 
 			function aciklama:PerformLayout()
 
@@ -477,7 +502,6 @@ local function changelogMenu()
 			
 			tarih:Dock( BOTTOM )
 			tarih:DockMargin(10,0,0, 4)
-			--DockMargin(number marginLeft,number marginTop,number marginRight,number marginBottom)
 
 			tarih:SetFont("tre14")
 			tarih:SetText( v.staff.." - "..v.date.." - "..v.time)

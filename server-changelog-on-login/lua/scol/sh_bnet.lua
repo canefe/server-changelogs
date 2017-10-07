@@ -38,7 +38,6 @@ if bnet == nil then
 		for i = 1 , messageLen do
 			data[i] = net.ReadType()
 		end
-		PrintTable(data)
 		if bnet.receiveEvents[messageName] ~= nil then
 			for k ,v in pairs(bnet.receiveEvents[messageName]) do
 				if SERVER then
